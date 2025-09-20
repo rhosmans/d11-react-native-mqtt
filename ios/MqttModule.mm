@@ -32,12 +32,26 @@ RCT_EXPORT_MODULE(MqttModule)
     return YES;
 }
 
-- (NSArray<NSString *> *)supportedEvents {
-    return @[@"CUSTOM_EVENT"];
-}
+  - (NSArray<NSString *> *)supportedEvents {
+      return @[
+          @"connected",
+          @"disconnected",
+          @"subscribe_success",
+          @"subscribe_failed",
+          @"client_initialize",
+          @"mqtt_error",
+          @"subscription_event"
+      ];
+  }
 
 - (void)sendEventToJs:(NSString * _Nonnull)eventName param:(NSDictionary<NSString *,id> *_Nullable)params {
      [self sendEventWithName:eventName body: params];
+}
+
+RCT_EXPORT_METHOD(removeListeners:(double)count) {
+    // React Native requires this method for NativeEventEmitter
+    // In our case, we don't need to do anything special here
+    // as event listeners are managed by the React Native framework
 }
 
 RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl) {

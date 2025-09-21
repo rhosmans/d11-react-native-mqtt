@@ -50,8 +50,6 @@ RCT_EXPORT_MODULE(MqttModule)
 
 RCT_EXPORT_METHOD(removeListeners:(double)count) {
     // React Native requires this method for NativeEventEmitter
-    // In our case, we don't need to do anything special here
-    // as event listeners are managed by the React Native framework
 }
 
 RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl) {

@@ -222,7 +222,6 @@ class MqttHelper(
           "" + error.message
         ) // TODO: Replace with LogWrapper when available on bridge
         
-        // Don't emit subscription errors if we're manually disconnecting
         if (!isManuallyDisconnecting) {
           val params = HashMap<String, Any>().apply {
             put("eventId", eventId)

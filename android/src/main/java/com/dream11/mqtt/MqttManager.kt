@@ -15,11 +15,14 @@ object MqttManager {
         host: String,
         port: Int,
         enableSslConfig:Boolean,
+        useWebSocket: Boolean = false,
+        webSocketUri: String = "/mqtt",
+        webSocketHeaders: Map<String, String> = emptyMap(),
         emitJsiEvent: (eventId: String, payload: HashMap<String, Any>) -> Unit
     ) {
         executor.submit {
             if (!clientMap.containsKey(clientId)) {
-                clientMap[clientId] = MqttHelper(clientId, host, port, enableSslConfig, emitJsiEvent)
+                clientMap[clientId] = MqttHelper(clientId, host, port, enableSslConfig, useWebSocket, webSocketUri, webSocketHeaders, emitJsiEvent)
             } else {
                 Log.w("MqttManager", "client already exists for clientId: $clientId with host: $host, port: $port")
             }

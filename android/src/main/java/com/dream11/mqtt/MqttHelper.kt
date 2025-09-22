@@ -15,11 +15,15 @@ class MqttHelper(
   host: String,
   port: Int,
   enableSslConfig: Boolean,
+  useWebSocket: Boolean = false,
+  webSocketUri: String = "/mqtt",
+  webSocketHeaders: Map<String, String> = emptyMap(),
   private val emitJsiEvent: (eventId: String, payload: HashMap<String, Any>) -> Unit
 ) {
   private lateinit var mqtt: Mqtt5RxClient
   private val subscriptionMap: HashMap<String, HashMap<String, Subscription>> = HashMap()
   private var isManuallyDisconnecting = false
+  private var connectDisposable: Disposable? = null
 
   companion object {
     const val CLIENT_INITIALIZE_EVENT = "client_initialize"
@@ -45,9 +49,9 @@ class MqttHelper(
   }
 
   init {
-    Log.d("MQTT init", "clientid " + clientId + "host " + host + "port " + port)
+    Log.d("MQTT init", "Initializing MQTT client - clientId: $clientId, host: $host, port: $port, enableSsl: $enableSslConfig, useWebSocket: $useWebSocket, webSocketUri: $webSocketUri, headers: $webSocketHeaders")
     try {
-      val client = Mqtt5Client.builder()
+      val clientBuilder = Mqtt5Client.builder()
         .identifier(clientId)
         .addDisconnectedListener { disconnectedContext ->
           val connPayload = try {
@@ -86,6 +90,18 @@ class MqttHelper(
         .serverHost(host)
         .serverPort(port)
 
+      // Configure transport (WebSocket or TCP)
+      val client = if (useWebSocket) {
+        Log.d("MQTT WebSocket", "Configuring WebSocket with URI: $webSocketUri")
+        clientBuilder
+          .webSocketConfig()
+          .serverPath(webSocketUri)
+          .applyWebSocketConfig()
+      } else {
+        Log.d("MQTT TCP", "Using TCP transport")
+        clientBuilder
+      }
+
       mqtt = if (enableSslConfig) {
         client
           .sslWithDefaultConfig()
@@ -116,8 +132,34 @@ class MqttHelper(
   }
 
   fun connect(options: MqttConnectOptions) {
-    Log.d("MQTT Connect called", "username " + options.username)
-    val disposable: Disposable = mqtt.connectWith()
+    Log.d("MQTT Connect", "Connect called - clientId: $clientId, username: ${options.username}, current state: ${mqtt.state}")
+    
+    // Dispose any existing connection attempt
+    connectDisposable?.let {
+      if (!it.isDisposed) {
+        Log.d("MQTT Connect", "Disposing previous connection attempt")
+        it.dispose()
+      }
+    }
+    
+    // Check if already connected or connecting
+    if (mqtt.state == MqttClientState.CONNECTED) {
+      Log.d("MQTT Connect", "Client already connected")
+      val params = HashMap<String, Any>().apply {
+        put("clientId", clientId)
+        put("reasonCode", 0)
+      }
+      emitJsiEvent(CONNECTED_EVENT, params)
+      return
+    }
+    
+    if (mqtt.state == MqttClientState.CONNECTING) {
+      Log.d("MQTT Connect", "Client already connecting, ignoring duplicate call")
+      return
+    }
+    
+    Log.d("MQTT Connect", "Starting connection attempt...")
+    connectDisposable = mqtt.connectWith()
       .keepAlive(options.keepAlive)
       .cleanStart(options.cleanSession)
       .simpleAuth()
@@ -126,7 +168,8 @@ class MqttHelper(
       .applySimpleAuth()
       .applyConnect()
       .doOnSuccess { ack ->
-        Log.d("MQTT Connect", " onSuccess " + ack.reasonString)
+        Log.d("MQTT Connect", "Connection successful - reasonCode: ${ack.reasonCode}, reasonString: ${ack.reasonString}")
+        connectDisposable = null
         for ((topic, eventIdMap) in subscriptionMap) {
           for ((eventId, subscription) in eventIdMap) {
             subscription.disposable.dispose()
@@ -135,7 +178,8 @@ class MqttHelper(
         }
       }
       .doOnError { error ->
-        Log.e("MQTT Connect", " onError " + error.message + ":" + error.cause)
+        Log.e("MQTT Connect", "Connection failed - error: ${error.message}, cause: ${error.cause}, errorClass: ${error.javaClass.simpleName}")
+        connectDisposable = null
         val params = HashMap<String, Any>().apply {
           put("clientId", clientId)
           put("clientConnected", false)
@@ -149,15 +193,30 @@ class MqttHelper(
       .subscribe(
         {},
         { throwable ->
-          // This is the error handler in the subscribe method.
-          // It will be called if an error occurs in the observable chain.
-          Log.e("RxJava", "Error occurred in subscribe: ${throwable.message}")
+          Log.e("RxJava", "RxJava error in connection subscribe: ${throwable.message}, errorClass: ${throwable.javaClass.simpleName}")
+          connectDisposable = null
         })
 
   }
 
   fun disconnectMqtt() {
+    Log.d("MQTT Disconnect", "disconnect called, current state: " + mqtt.state)
     isManuallyDisconnecting = true
+    
+    // Dispose any pending connection attempt
+    connectDisposable?.let {
+      if (!it.isDisposed) {
+        Log.d("MQTT Disconnect", "Disposing pending connection attempt")
+        it.dispose()
+      }
+      connectDisposable = null
+    }
+    
+    if (mqtt.state == MqttClientState.DISCONNECTED) {
+      Log.d("MQTT Disconnect", "Client already disconnected")
+      return
+    }
+    
     val disposable: Disposable = mqtt.disconnect()
       .doOnComplete {
         Log.d(

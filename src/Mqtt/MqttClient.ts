@@ -10,7 +10,7 @@ import type {
   MqttEventsInterface,
   MqttOptions,
   SubscribeMqtt,
-  PublishMqtt,
+  WebSocketConfig,
 } from './MqttClient.interface';
 import { EventEmitter } from './EventEmitter';
 import { getMqttBackoffTime } from './MqttClient.utils';
@@ -57,7 +57,13 @@ export class MqttClient {
       return;
     }
 
-    this.createClient(clientId, host, port, options?.enableSslConfig ?? false);
+    this.createClient(
+      clientId,
+      host,
+      port,
+      options?.enableSslConfig ?? false,
+      options?.webSocket
+    );
 
     this.setOnConnectCallback(
       (ack: MqttEventsInterface[MQTT_EVENTS.CONNECTED_EVENT]) => {
@@ -118,11 +124,30 @@ export class MqttClient {
     clientId: any,
     host: any,
     port: any,
-    enableSslConfig: any
+    enableSslConfig: any,
+    webSocketConfig?: WebSocketConfig
   ) {
     try {
-      await MqttModule.createMqtt(clientId, host, port, enableSslConfig);
-      console.log('MQTT client created successfully');
+      const useWebSocket = webSocketConfig?.useWebSocket ?? false;
+      const webSocketUri = webSocketConfig?.uri ?? '/mqtt';
+      const webSocketHeaders = webSocketConfig?.headers ?? {};
+
+      // Use React Native bridge method (JSI createMqtt not yet implemented)
+      await MqttModule.createMqtt(
+        clientId,
+        host,
+        port,
+        enableSslConfig,
+        useWebSocket,
+        webSocketUri,
+        webSocketHeaders
+      );
+      console.log(
+        'MQTT client created successfully',
+        useWebSocket
+          ? `with WebSocket${enableSslConfig ? ' (WSS)' : ''}`
+          : `with TCP${enableSslConfig ? ' (TLS)' : ''}`
+      );
     } catch (error) {
       console.error('Failed to create MQTT client', error);
     }
@@ -350,16 +375,6 @@ export class MqttClient {
         MqttJSIModule.unsubscribeMqtt(eventId, this.clientId, topic);
       },
     };
-  }
-
-  /**
-   * Method to publish a message to an MQTT topic with the specified Quality of Service (QoS).
-   * @param topic The MQTT topic to publish to.
-   * @param message The MQTT message body.
-   * @param qos The Quality of Service level for the subscription (default is QoS 1).
-   */
-  publish({ topic, payload, qos = 1 }: PublishMqtt) {
-    return MqttJSIModule.publishMqtt(this.clientId, topic, payload, qos);
   }
 
   /**

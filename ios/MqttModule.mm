@@ -45,16 +45,19 @@ RCT_EXPORT_MODULE(MqttModule)
 }
 
 - (void)sendEventToJs:(NSString * _Nonnull)eventName param:(NSDictionary<NSString *,id> *_Nullable)params {
+     NSLog(@"🎪 OBJC: MqttModule.sendEventToJs called with event: %@ params: %@", eventName, params);
      [self sendEventWithName:eventName body: params];
+     NSLog(@"🎪 OBJC: sendEventWithName completed for event: %@", eventName);
 }
 
 RCT_EXPORT_METHOD(removeListeners:(double)count) {
     // React Native requires this method for NativeEventEmitter
 }
 
-RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl) {
-    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSsl];
+RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl useWebSocket:(BOOL)useWebSocket webSocketUri:(NSString *)webSocketUri webSocketHeaders:(NSDictionary *)webSocketHeaders) {
+    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSsl useWebSocket:useWebSocket webSocketUri:webSocketUri webSocketHeaders:webSocketHeaders];
 }
+
 
 static Value removeMqtt(Runtime &runtime, const Value &thisValue, const Value *arguments, size_t count) {
     NSString *clientId = mqtt::convertJSIStringToNSString(runtime, arguments[0].getString(runtime));
@@ -107,16 +110,6 @@ static Value getConnectionStatusMqtt(Runtime &runtime, const Value &thisValue, c
     return jsiValue;
 }
 
-static Value publishMqtt(Runtime &runtime, const Value &thisValue, const Value *arguments, size_t count) {
-   NSString *clientId = mqtt::convertJSIStringToNSString(runtime, arguments[0].getString(runtime));
-   NSString *topic = mqtt::convertJSIStringToNSString(runtime, arguments[1].getString(runtime));
-   NSString *payload = mqtt::convertJSIStringToNSString(runtime, arguments[2].getString(runtime));
-   NSNumber *qosNumber = mqtt::convertJSIValueToObjCObject(runtime, arguments[3]);
-   NSInteger qos = [qosNumber intValue];
-
-   [[Mqtt shared] publishMqtt:clientId topic:topic payload:payload qos:qos];
-   return Value();
-}
 
 
 static void installJSIModule(Runtime &jsiRuntime) {
@@ -130,7 +123,6 @@ static void installJSIModule(Runtime &jsiRuntime) {
     mqtt::registerCxxFunction(jsiRuntime, module, "subscribeMqtt", 4, subscribeMqtt);
     mqtt::registerCxxFunction(jsiRuntime, module, "unsubscribeMqtt", 3, unsubscribeMqtt);
     mqtt::registerCxxFunction(jsiRuntime, module, "getConnectionStatusMqtt", 1, getConnectionStatusMqtt);
-    mqtt::registerCxxFunction(jsiRuntime, module, "publishMqtt", 4, publishMqtt);
     
     jsiRuntime.global().setProperty(jsiRuntime, "__MqttModuleProxy", std::move(module));
 }

@@ -75,7 +75,10 @@ describe('MqttClient', () => {
       clientId,
       host,
       port,
-      false
+      false,
+      false,
+      '/mqtt',
+      {}
     );
   });
 

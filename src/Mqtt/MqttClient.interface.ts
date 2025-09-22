@@ -5,6 +5,12 @@ import {
   MqttQos,
 } from './MqttClient.constants';
 
+export type WebSocketConfig = {
+  useWebSocket?: boolean;
+  uri?: string;
+  headers?: Record<string, string>;
+};
+
 export type MqttConnect = {
   keepAlive?: number;
   cleanSession?: boolean;
@@ -14,6 +20,7 @@ export type MqttConnect = {
   backoffTime?: number;
   jitter?: number;
   enableSslConfig?: boolean;
+  webSocket?: WebSocketConfig;
 };
 
 export type MqttReconnect = {
@@ -83,12 +90,6 @@ export type SubscribeMqtt = {
   onError?: (
     error: MqttEventsInterface[MQTT_EVENTS.SUBSCRIPTION_FAILED_EVENT]
   ) => void;
-};
-
-export type PublishMqtt = {
-  topic: string;
-  payload: string;
-  qos?: MqttQos;
 };
 
 export type DisconnectCallback = {

@@ -6,6 +6,7 @@ export const MqttModule: NativeModule & {
 
 export interface MqttModuleProxy {
   removeMqtt: (clientId: string) => void;
+
   connectMqtt: (
     clientId: string,
     options: {
@@ -28,13 +29,6 @@ export interface MqttModuleProxy {
   unsubscribeMqtt: (eventId: string, clientId: string, topic: string) => void;
 
   getConnectionStatusMqtt: (clientId: string) => string;
-
-  publishMqtt: (
-    clientId: string,
-    topic: string,
-    message: string,
-    qos: 0 | 1 | 2
-  ) => void;
 }
 
 declare global {

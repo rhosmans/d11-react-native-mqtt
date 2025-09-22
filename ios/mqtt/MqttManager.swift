@@ -15,10 +15,10 @@ class MqttManager {
     private init() {
     }
 
-    func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
+    func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, useWebSocket: Bool = false, webSocketUri: String = "/mqtt", webSocketHeaders: [String: String] = [:], emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         executer.async {
             if self.clientMap[clientId] == nil {
-                self.clientMap[clientId] = MqttHelper(clientId, host: host, port: port, enableSslConfig: enableSslConfig, emitJsiEvent: emitJsiEvent)
+                self.clientMap[clientId] = MqttHelper(clientId, host: host, port: port, enableSslConfig: enableSslConfig, useWebSocket: useWebSocket, webSocketUri: webSocketUri, webSocketHeaders: webSocketHeaders, emitJsiEvent: emitJsiEvent)
             } else {
                 // TODO: "MqttManager", "client already exists for clientId: $clientId with host: $host, port: $port"
             }
@@ -80,14 +80,4 @@ class MqttManager {
             }
         }
     }
-
-   func publishMqtt(_ clientId: String, topic: String, payload: String, qos: Int) {
-       executer.async {
-           if let client = self.clientMap[clientId] {
-               client.publishMqtt(topic, payload: payload, qos: qos)
-           } else {
-               // TODO: "MqttManager", "unable to publish message as the client for clientId: $clientId does not exist"
-           }
-       }
-   }
 }

@@ -424,13 +424,6 @@ static jsi::Value executeJNIFunction(jsi::Runtime &runtime, const jsi::Value &th
 
 static jobject java_mqtt_object;
 
-static jsi::Value createMqtt(jsi::Runtime &runtime, const jsi::Value &thisValue,
-                             const jsi::Value *arguments, std::size_t count) {
-    jsi::Value retVal = executeJNIFunction(runtime, thisValue, arguments, count,
-                                           "createMqtt", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/Boolean;)V",
-                                           true, java_mqtt_object);
-    return retVal;
-}
 
 static jsi::Value removeMqtt(jsi::Runtime &runtime, const jsi::Value &thisValue,
                              const jsi::Value *arguments, std::size_t count) {
@@ -485,7 +478,6 @@ static void installMqttJSIModule(jsi::Runtime &jsiRuntime){
 
     jsi::Object module = jsi::Object(jsiRuntime);
 
-    addGlobalHostFunction(jsiRuntime, module, "createMqtt", 4, createMqtt);
     addGlobalHostFunction(jsiRuntime, module, "removeMqtt", 1, removeMqtt);
     addGlobalHostFunction(jsiRuntime, module, "connectMqtt", 2, connectMqtt);
     addGlobalHostFunction(jsiRuntime, module, "disconnectMqtt", 1, disconnectMqtt);

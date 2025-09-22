@@ -17,13 +17,15 @@ public class Mqtt: NSObject, MqttDelegate {
     }
     
     func triggerNativeEventEmitter(_ event: String, params: [String: Any]?) {
+        NSLog("🚀 SWIFT: triggerNativeEventEmitter called with event: %@ params: %@", event, params?.description ?? "nil")
         emitterModule.sendEvent(event, param: params)
+        NSLog("🚀 SWIFT: emitterModule.sendEvent completed for event: %@", event)
     }
 
     @objc
-    public func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig: Bool) {
-        MqttManager.shared.createMqtt(clientId, host: host, port: port, enableSslConfig:enableSslConfig, emitJsiEvent: triggerNativeEventEmitter)
-        print("CREATE MQTT CALLED with ",enableSslConfig)
+    public func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, useWebSocket: Bool, webSocketUri: String, webSocketHeaders: [String: String]) {
+        MqttManager.shared.createMqtt(clientId, host: host, port: port, enableSslConfig:enableSslConfig, useWebSocket: useWebSocket, webSocketUri: webSocketUri, webSocketHeaders: webSocketHeaders, emitJsiEvent: triggerNativeEventEmitter)
+        print("CREATE MQTT CALLED with SSL:",enableSslConfig, "WebSocket:",useWebSocket)
     }
     
     @objc

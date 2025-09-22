@@ -8,6 +8,7 @@ PODS:
     - CocoaMQTT (= 2.1.5)
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
+    - Starscream
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.72.9)
   - FBReactNativeSpec (0.72.9):
@@ -435,6 +436,7 @@ PODS:
     - React-logger (= 0.72.9)
     - React-perflogger (= 0.72.9)
   - SocketRocket (0.6.1)
+  - Starscream (4.0.8)
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -490,6 +492,7 @@ SPEC REPOS:
     - libevent
     - MqttCocoaAsyncSocket
     - SocketRocket
+    - Starscream
 
 EXTERNAL SOURCES:
   boost:
@@ -576,7 +579,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7dcd2de282d72e344012f7d6564d024930a6a440
   CocoaMQTT: af1bd1e42f81b9f4f9dcf3a8990c42b7c00989b9
-  d11-mqtt: c2a55bd65e82f6b627d32d3a3a2107ddcadb526e
+  d11-mqtt: 7cd208dfe67ab95dbe5a2106501ba392877968ef
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: dc178b8748748c036ef9493a5d59d6d1f91a36ce
   FBReactNativeSpec: d0aaae78e93c89dc2d691d8052a4d2aeb1b461ee
@@ -618,6 +621,7 @@ SPEC CHECKSUMS:
   React-utils: b74047488a8efe1790b016bd50788b2b0bd4566c
   ReactCommon: 32f066dc0265a6c65312c276e47dd7ecf6a1a6d9
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
+  Starscream: 19b5533ddb925208db698f0ac508a100b884a1b9
   Yoga: eddf2bbe4a896454c248a8f23b4355891eb720a6
 
 PODFILE CHECKSUM: fb028348e5c9fd9f91ffe087abe901be516f1b99

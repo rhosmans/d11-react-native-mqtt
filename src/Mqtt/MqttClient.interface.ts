@@ -5,6 +5,12 @@ import {
   MqttQos,
 } from './MqttClient.constants';
 
+export type WebSocketConfig = {
+  useWebSocket?: boolean;
+  uri?: string;
+  headers?: Record<string, string>;
+};
+
 export type MqttConnect = {
   keepAlive?: number;
   cleanSession?: boolean;
@@ -14,6 +20,7 @@ export type MqttConnect = {
   backoffTime?: number;
   jitter?: number;
   enableSslConfig?: boolean;
+  webSocket?: WebSocketConfig;
 };
 
 export type MqttReconnect = {

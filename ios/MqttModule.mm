@@ -32,29 +32,32 @@ RCT_EXPORT_MODULE(MqttModule)
     return YES;
 }
 
-  - (NSArray<NSString *> *)supportedEvents {
-      return @[
-          @"connected",
-          @"disconnected",
-          @"subscribe_success",
-          @"subscribe_failed",
-          @"client_initialize",
-          @"mqtt_error",
-          @"subscription_event"
-      ];
-  }
+- (NSArray<NSString *> *)supportedEvents {
+    return @[
+        @"connected",
+        @"disconnected",
+        @"subscribe_success",
+        @"subscribe_failed",
+        @"client_initialize",
+        @"mqtt_error",
+        @"subscription_event"
+    ];
+}
 
 - (void)sendEventToJs:(NSString * _Nonnull)eventName param:(NSDictionary<NSString *,id> *_Nullable)params {
+     NSLog(@"🎪 OBJC: MqttModule.sendEventToJs called with event: %@ params: %@", eventName, params);
      [self sendEventWithName:eventName body: params];
+     NSLog(@"🎪 OBJC: sendEventWithName completed for event: %@", eventName);
 }
 
 RCT_EXPORT_METHOD(removeListeners:(double)count) {
     // React Native requires this method for NativeEventEmitter
 }
 
-RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl) {
-    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSsl];
+RCT_EXPORT_METHOD(createMqtt:(NSString *)clientId host:(NSString *)host port:(NSInteger)port enableSsl:(BOOL)enableSsl useWebSocket:(BOOL)useWebSocket webSocketUri:(NSString *)webSocketUri webSocketHeaders:(NSDictionary *)webSocketHeaders) {
+    [[Mqtt shared] createMqtt:clientId host:host port:port enableSslConfig:enableSsl useWebSocket:useWebSocket webSocketUri:webSocketUri webSocketHeaders:webSocketHeaders];
 }
+
 
 static Value removeMqtt(Runtime &runtime, const Value &thisValue, const Value *arguments, size_t count) {
     NSString *clientId = mqtt::convertJSIStringToNSString(runtime, arguments[0].getString(runtime));
@@ -106,6 +109,7 @@ static Value getConnectionStatusMqtt(Runtime &runtime, const Value &thisValue, c
     auto jsiValue = mqtt::convertNSStringToJSIString(runtime, state);
     return jsiValue;
 }
+
 
 
 static void installJSIModule(Runtime &jsiRuntime) {

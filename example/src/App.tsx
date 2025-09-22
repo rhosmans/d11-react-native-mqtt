@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { RoundButton } from './Button';
 import { mqttConfig } from './mqttConstants';
 import { useEventListeners } from './useEventListeners';
@@ -11,8 +11,10 @@ export default function App() {
   const [mqttClient, setClient] = React.useState<MqttClient | undefined>(
     undefined
   );
+  const [connectionStatus, setConnectionStatus] =
+    React.useState<string>('disconnected');
 
-  useEventListeners(mqttClient);
+  useEventListeners(mqttClient, setConnectionStatus);
 
   React.useEffect(() => {
     initializeMqttClient(mqttConfig).then((client) => {
@@ -22,20 +24,26 @@ export default function App() {
     });
   }, []);
 
-  const connectMqtt = React.useCallback(
-    () => (mqttClient ? mqttClient.connect() : null),
-    [mqttClient]
-  );
+  const connectMqtt = React.useCallback(() => {
+    if (mqttClient) {
+      console.log('::MQTT Attempting to connect...');
+      setConnectionStatus('connecting');
+      mqttClient.connect();
+    }
+  }, [mqttClient]);
 
   const subscribeMqtt = React.useCallback(
     () => (mqttClient ? mqttClient.subscribe(subscriptionConfig) : null),
     [mqttClient]
   );
 
-  const disconnectMqtt = React.useCallback(
-    () => (mqttClient ? mqttClient.disconnect() : null),
-    [mqttClient]
-  );
+  const disconnectMqtt = React.useCallback(() => {
+    if (mqttClient) {
+      console.log('::MQTT Attempting to disconnect...');
+      setConnectionStatus('disconnecting');
+      mqttClient.disconnect();
+    }
+  }, [mqttClient]);
 
   const removeMqtt = React.useCallback(() => {
     if (mqttClient) {
@@ -45,14 +53,16 @@ export default function App() {
   }, [mqttClient]);
 
   const getConnectionStatus = React.useCallback(() => {
-    const connectionStatus = mqttClient
-      ? mqttClient.getConnectionStatus()
-      : null;
-    console.log(`::MQTT connectionStatus:${connectionStatus}`);
+    const status = mqttClient ? mqttClient.getConnectionStatus() : 'no client';
+    console.log(`::MQTT connectionStatus:${status}`);
+    setConnectionStatus(status);
   }, [mqttClient]);
 
   return (
     <View style={styles.container}>
+      <Text style={styles.statusText}>
+        Connection Status: {connectionStatus}
+      </Text>
       <RoundButton
         onPress={connectMqtt}
         backgroundColor={'#118a7e'}
@@ -93,5 +103,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#D3D3D3',
+  },
+  statusText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    minWidth: 250,
+    textAlign: 'center',
   },
 });

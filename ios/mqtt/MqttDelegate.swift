@@ -8,7 +8,7 @@
 import Foundation
 
 @objc public protocol MqttDelegate {
-    func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig:Bool)
+    func createMqtt(_ clientId: String, host: String, port: Int, enableSslConfig:Bool, useWebSocket: Bool, webSocketUri: String, webSocketHeaders: [String: String])
     func removeMqtt(_ clientId: String)
     func connectMqtt(_ clientId: String, options: [String: Any])
     func disconnectMqtt(_ clientId: String)

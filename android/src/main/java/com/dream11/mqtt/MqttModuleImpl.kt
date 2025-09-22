@@ -6,6 +6,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
@@ -57,14 +58,28 @@ class MqttModuleImpl(reactContext: ReactApplicationContext?) :
   @ReactMethod
   fun createMqtt(clientId: String, host: String, port: Int, enableSslConfig: Boolean, promise: Promise) {
         try {
-            MqttManager.createMqtt(clientId, host, port, enableSslConfig, this::emitJsiEvent)
+            MqttManager.createMqtt(clientId, host, port, enableSslConfig, false, "/mqtt", emptyMap(), this::emitJsiEvent)
             promise.resolve(null)
-            Log.d("MQTT", "connect called via React Native bridge")
+            Log.d("MQTT", "createMqtt called via React Native bridge")
         } catch (e: Exception) {
             promise.reject("Error", "Failed to create MQTT connection", e)
             Log.e("MQTT", "Error in createMqtt", e)
         }
   }
+
+  @ReactMethod
+  fun createMqtt(clientId: String, host: String, port: Int, enableSslConfig: Boolean, useWebSocket: Boolean, webSocketUri: String, webSocketHeaders: ReadableMap, promise: Promise) {
+        try {
+            val headersMap = webSocketHeaders.toHashMap().mapValues { it.value.toString() }
+            MqttManager.createMqtt(clientId, host, port, enableSslConfig, useWebSocket, webSocketUri, headersMap, this::emitJsiEvent)
+            promise.resolve(null)
+            Log.d("MQTT", "createMqtt with WebSocket called via React Native bridge")
+        } catch (e: Exception) {
+            promise.reject("Error", "Failed to create MQTT connection with WebSocket", e)
+            Log.e("MQTT", "Error in createMqtt with WebSocket", e)
+        }
+  }
+
 
     private fun emitJsiEvent(eventName: String, payload: HashMap<String, Any>) {
         reactApplicationContext

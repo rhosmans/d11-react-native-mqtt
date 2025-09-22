@@ -9,6 +9,7 @@
 
 import Foundation
 import CocoaMQTT
+import Starscream
 
 class MqttHelper {
     private let emitJsiEvent: (_ event: String, _ params: [String : Any]?) -> Void
@@ -36,12 +37,23 @@ class MqttHelper {
     private let INITIALIZATION_ERROR = -6
     private let RX_CHAIN_ERROR = -7
 
-    init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
+    init(_ clientId: String, host: String, port: Int, enableSslConfig: Bool, useWebSocket: Bool = false, webSocketUri: String = "/mqtt", webSocketHeaders: [String: String] = [:], emitJsiEvent: @escaping (_ event: String, _ params: [String : Any]?) -> Void) {
         self.emitJsiEvent = emitJsiEvent
         self.clientId = clientId
-        mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+        
+        if useWebSocket {
+            // Create WebSocket connection
+            let websocket = CocoaMQTTWebSocket(uri: webSocketUri)
+            websocket.enableSSL = enableSslConfig
+            websocket.headers = webSocketHeaders
+            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port), socket: websocket)
+        } else {
+            // Create regular TCP connection (current implementation)
+            mqtt = CocoaMQTT5(clientID: clientId, host: host, port: UInt16(port))
+            mqtt.enableSSL = enableSslConfig
+        }
+        
         mqtt.delegate = self
-        mqtt.enableSSL = enableSslConfig
 
         if mqtt.clientID == clientId && mqtt.host == host && mqtt.port == UInt16(port) {
             emitJsiEvent(CLIENT_INITIALIZE_EVENT, ["clientInit": true, "clientId": clientId])
@@ -117,12 +129,18 @@ class MqttHelper {
 
 extension MqttHelper: CocoaMQTT5Delegate {
     func mqtt5(_ mqtt5: CocoaMQTT5, didConnectAck ack: CocoaMQTTCONNACKReasonCode, connAckData: MqttDecodeConnAck?) {
+        print("🚀 MQTT5 Connection ACK received: \(ack) for client: \(clientId)")
+        
         if (ack != .success) {
+            print("❌ MQTT5 Connection failed with reason: \(ack.rawValue)")
             emitJsiEvent(DISCONNECTED_EVENT, ["reasonCode": ack.rawValue, "clientId": clientId])
             return
         }
 
+        print("✅ MQTT5 Connection successful, emitting connected event for client: \(clientId)")
+        NSLog("🎯 SWIFT: About to emit CONNECTED_EVENT for client: %@", clientId)
         emitJsiEvent(CONNECTED_EVENT, ["reasonCode": ack.rawValue, "clientId": clientId])
+        NSLog("🎯 SWIFT: CONNECTED_EVENT emitted for client: %@", clientId)
 
         for (topic, idSubscriptionMap) in subscriptionMap {
             if let maxQos = idSubscriptionMap.values.max(by: { $0.qos < $1.qos })?.qos {
@@ -198,10 +216,12 @@ extension MqttHelper: CocoaMQTT5Delegate {
       
         if let error = err {
             // Error disconnection
+            print("🔴 MQTT5 Disconnected with error: \(error.localizedDescription) for client: \(clientId)")
             reasonCode = DISCONNECTION_ERROR
             errorMessage = error.localizedDescription
         } else {
             // Normal disconnection
+            print("🔴 MQTT5 Disconnected normally for client: \(clientId)")
             reasonCode = 0 // NORMAL_DISCONNECTION
             errorMessage = ""
         }
@@ -211,7 +231,10 @@ extension MqttHelper: CocoaMQTT5Delegate {
             "errorMessage": errorMessage
         ]
         let paramsWithClientId = params.merging(["clientId": clientId]) { (_, new) in new }
+        print("📤 Emitting disconnected event with params: \(paramsWithClientId)")
+        NSLog("🎯 SWIFT: About to emit DISCONNECTED_EVENT for client: %@", clientId)
         emitJsiEvent(DISCONNECTED_EVENT, paramsWithClientId)
+        NSLog("🎯 SWIFT: DISCONNECTED_EVENT emitted for client: %@", clientId)
     }
 }
 

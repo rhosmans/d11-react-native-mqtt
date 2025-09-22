@@ -59,4 +59,10 @@ public class Mqtt: NSObject, MqttDelegate {
         print("getConnectionStatusMqtt MQTT CALLED")
         return MqttManager.shared.getConnectionStatusMqtt(clientId)
     }
+
+    @objc
+    public func publishMqtt(_ clientId: String, topic: String, payload: String, qos: Int) {
+        MqttManager.shared.publishMqtt(clientId, topic: topic, payload: payload, qos: qos)
+        print("publishMqtt MQTT CALLED")
+    }
 }

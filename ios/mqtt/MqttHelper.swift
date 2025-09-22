@@ -113,6 +113,18 @@ class MqttHelper {
                 return CONNECTED
         }
     }
+
+   func publishMqtt(_ topic: String, payload: String, qos: Int) {
+       if mqtt.connState == .connected {
+           let qosEnum = CocoaMQTTQoS(rawValue: UInt8(qos)) ?? .qos0
+           let payloadByteArr = [UInt8](payload.utf8)
+           let publishMsg = CocoaMQTT5Message(topic: topic, payload: payloadByteArr, qos: qosEnum)
+
+           let properties = MqttPublishProperties()
+
+           mqtt.publish(publishMsg, DUP: false, retained: false, properties: properties)
+       }
+   }
 }
 
 extension MqttHelper: CocoaMQTT5Delegate {

@@ -85,6 +85,12 @@ export type SubscribeMqtt = {
   ) => void;
 };
 
+export type PublishMqtt = {
+  topic: string;
+  payload: string;
+  qos?: MqttQos;
+};
+
 export type DisconnectCallback = {
   mqtt5ReasonCode: Mqtt5ReasonCode;
   options: MqttConnect & {

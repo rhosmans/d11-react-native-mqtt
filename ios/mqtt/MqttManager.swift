@@ -80,4 +80,14 @@ class MqttManager {
             }
         }
     }
+
+   func publishMqtt(_ clientId: String, topic: String, payload: String, qos: Int) {
+       executer.async {
+           if let client = self.clientMap[clientId] {
+               client.publishMqtt(topic, payload: payload, qos: qos)
+           } else {
+               // TODO: "MqttManager", "unable to publish message as the client for clientId: $clientId does not exist"
+           }
+       }
+   }
 }

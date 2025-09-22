@@ -32,6 +32,17 @@ export default function App() {
     [mqttClient]
   );
 
+  const publishMqtt = React.useCallback(() => {
+    if (mqttClient) {
+      mqttClient.publish({
+        topic: 'test/publish',
+        payload: `Hello from React Native! ${new Date().toISOString()}`,
+        qos: 1,
+      });
+      console.log('::MQTT: Published test message');
+    }
+  }, [mqttClient]);
+
   const disconnectMqtt = React.useCallback(
     () => (mqttClient ? mqttClient.disconnect() : null),
     [mqttClient]
@@ -69,6 +80,12 @@ export default function App() {
         onPress={subscribeMqtt}
         backgroundColor={'#7fa99b'}
         buttonText="Subscribe Mqtt"
+        disabled={!mqttClient}
+      />
+      <RoundButton
+        onPress={publishMqtt}
+        backgroundColor={'#f39c12'}
+        buttonText="Publish Test Message"
         disabled={!mqttClient}
       />
       <RoundButton
